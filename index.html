@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vibe-Check Live GPS</title>
+    <title>Vibe-Check Final</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root { 
@@ -19,14 +19,13 @@
         .app-container { background-color: var(--bg-soft); width: 100%; max-width: 400px; height: 100vh; max-height: 850px; position: relative; overflow: hidden; display: flex; flex-direction: column; }
         @media (min-width: 450px) { .app-container { height: 90vh; border-radius: 44px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 8px rgba(255,255,255,0.6); } }
 
-        /* Header & Suche */
+        /* Header */
         .top-bar { padding: 40px 24px 15px 24px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 50; display: flex; flex-direction: column; gap: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.5); }
         .top-header { display: flex; justify-content: space-between; align-items: center; }
         h1 { font-size: 1.6rem; margin: 0; font-weight: 800; background: linear-gradient(135deg, var(--pastel-salmon), var(--pastel-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        /* GPS Pille */
-        .location-pill { background: white; color: #64748b; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; cursor: pointer; transition: 0.3s; }
-        .location-pill:active { transform: scale(0.95); background: var(--pastel-blue); color: white; }
+        .location-pill { background: white; color: #64748b; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; cursor: pointer; transition: 0.2s; }
+        .location-pill:active { transform: scale(0.95); }
 
         .search-container { display: flex; gap: 10px; align-items: center; }
         .search-box { flex: 1; background: #f1f5f9; border-radius: 16px; display: flex; align-items: center; padding: 0 16px; height: 46px; }
@@ -45,17 +44,17 @@
         .tag { font-size: 0.75rem; background: white; padding: 6px 14px; border-radius: 10px; font-weight: 600; border: 1px solid #f1f5f9; }
         .tag.highlight { background: rgba(167, 199, 231, 0.15); color: #478ecc; }
 
-        /* Bottom Nav - Icons jetzt perfekt symmetrisch & gleich verteilt */
+        /* Bottom Nav - Fix für Symmetrie & Aktivität */
         .bottom-nav-container { position: absolute; bottom: 30px; left: 0; width: 100%; display: flex; justify-content: center; z-index: 100; }
         .bottom-nav { 
-            width: 85%; background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(25px); 
+            width: 85%; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(25px); 
             border-radius: 32px; display: grid; grid-template-columns: 1fr 1fr 65px 1fr 1fr; 
             align-items: center; justify-items: center; padding: 10px 15px; 
             box-shadow: 0 20px 40px rgba(0,0,0,0.06); border: 1px solid rgba(255,255,255,0.8); 
         }
-        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; color: #94a3b8; font-size: 0.65rem; font-weight: 700; cursor: pointer; text-decoration: none; width: 100%; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; color: #94a3b8; font-size: 0.65rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
         .nav-item.active { color: var(--pastel-salmon); }
-        .nav-icon { font-size: 1.4rem; margin-bottom: 1px; }
+        .nav-icon { font-size: 1.4rem; }
         
         .fab-button { 
             width: 58px; height: 58px; border-radius: 50%; 
@@ -64,7 +63,6 @@
             font-size: 2.2rem; transform: translateY(-18px); box-shadow: 0 10px 20px rgba(255, 159, 138, 0.4); 
             border: 4px solid white; cursor: pointer; transition: 0.2s;
         }
-        .fab-button:active { transform: translateY(-12px) scale(0.9); }
     </style>
 </head>
 <body>
@@ -73,7 +71,7 @@
     <div class="top-bar">
         <div class="top-header">
             <h1>Vibe-Check</h1>
-            <div class="location-pill" id="locationPill" onclick="autoDetectLocation()">📍 Live-Standort</div>
+            <div class="location-pill" id="locationPill" onclick="autoDetect()">📍 Live-Ort</div>
         </div>
         <div class="search-container">
             <div class="search-box">
@@ -84,45 +82,41 @@
     </div>
 
     <div class="feed-container" id="feedContainer">
-        <h2 id="feedTitle">Entdecke Vibes in deiner Nähe ✨</h2>
+        <h2 id="feedTitle">Entdecke Vibes ✨</h2>
         <div id="statusMessage" style="text-align:center; padding: 40px; color: #94a3b8;">
-            Tippe auf "Live-Standort" oder suche eine Stadt.
+            Suche eine Stadt oder nutze GPS.
         </div>
     </div>
 
     <div class="bottom-nav-container">
         <div class="bottom-nav">
-            <div class="nav-item"><span class="nav-icon">🗺️</span><span>Radar</span></div>
-            <div class="nav-item active"><span class="nav-icon">✨</span><span>Feed</span></div>
-            <div class="fab-button">+</div>
-            <div class="nav-item"><span class="nav-icon">💬</span><span>Chats</span></div>
-            <div class="nav-item"><span class="nav-icon">👤</span><span>Profil</span></div>
+            <div class="nav-item" onclick="setActive(this, 'Radar')"><span class="nav-icon">🗺️</span><span>Radar</span></div>
+            <div class="nav-item active" onclick="setActive(this, 'Feed')"><span class="nav-icon">✨</span><span>Feed</span></div>
+            <div class="fab-button" onclick="alert('Vibe posten...')">+</div>
+            <div class="nav-item" onclick="setActive(this, 'Chats')"><span class="nav-icon">💬</span><span>Chats</span></div>
+            <div class="nav-item" onclick="setActive(this, 'Profil')"><span class="nav-icon">👤</span><span>Profil</span></div>
         </div>
     </div>
 </div>
 
 <script>
-    // API-Key fixiert
     const API_KEY = "AIzaSyDZCOlfxj6iOMLD9ZsH_a0fKScKnNBP6RA"; 
 
-    // GPS AUTOMATIK
-    async function autoDetectLocation() {
-        const pill = document.getElementById('locationPill');
-        pill.innerHTML = "📍 Ortung...";
-        
+    // Buttons aktiv machen
+    function setActive(el, page) {
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('feedTitle').innerText = page + " für dich";
+    }
+
+    // GPS & Suche
+    async function autoDetect() {
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(async (position) => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-                pill.innerHTML = "📍 Standort aktiv";
-                // Wir schicken die Koordinaten direkt an die KI für lokale Tipps
-                fetchVibes(`Koordinaten: ${lat}, ${lon} (Nahbereich)`);
-            }, () => {
-                pill.innerHTML = "📍 GPS Fehler";
-                alert("Bitte erlaube den Standort-Zugriff in deinem Browser.");
-            });
-        } else {
-            alert("Dein Browser unterstützt kein GPS.");
+            document.getElementById('locationPill').innerText = "📍 Ortung...";
+            navigator.geolocation.getCurrentPosition(pos => {
+                fetchVibes(`lat ${pos.coords.latitude}, lon ${pos.coords.longitude}`);
+                document.getElementById('locationPill').innerText = "📍 Aktiv";
+            }, () => fetchVibes("Berlin"));
         }
     }
 
@@ -133,15 +127,15 @@
         }
     }
 
-    async function fetchVibes(query) {
+    async function fetchVibes(q) {
         const feed = document.getElementById('feedContainer');
-        feed.innerHTML = `<h3 style="text-align:center; padding-top: 50px; color: #64748b;">Suche Vibes für ${query}...</h3>`;
+        feed.innerHTML = `<p style="text-align:center; padding-top:50px;">Lade echte Vibes für ${q}...</p>`;
 
         try {
-            // FIX: Verwendung von gemini-1.5-flash-latest für API v1beta
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`;
+            // NEUE API STRUKTUR (V1 statt V1BETA)
+            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
             
-            const prompt = `Du bist das Vibe-Check Backend. Nenne 3 echte, angesagte Cafés oder Spots für: "${query}". Antworte NUR im JSON-Format als Array: [{"user":"@local","time":"Gerade","place":"Name","review":"Vibe-Beschreibung","highlight":"☁️ Cozy","tags":["Tag1","Tag2"]}]`;
+            const prompt = `Gib mir 3 echte, coole Cafés in ${q}. Antworte NUR als JSON Array: [{"user":"@local","time":"10m","place":"Name","review":"Text","highlight":"☁️ Cozy","tags":["Tag1"]}]`;
 
             const response = await fetch(url, {
                 method: "POST",
@@ -150,31 +144,22 @@
             });
 
             const data = await response.json();
-            
-            if (data.error) throw new Error(data.error.message);
+            let text = data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim();
+            const spots = JSON.parse(text);
 
-            let rawText = data.candidates[0].content.parts[0].text;
-            rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-            const spots = JSON.parse(rawText);
-
-            feed.innerHTML = `<h2>Vibes für dich</h2>`;
-            spots.forEach((spot, i) => {
+            feed.innerHTML = `<h2>Top Spots</h2>`;
+            spots.forEach(s => {
                 feed.innerHTML += `
-                    <div class="feed-card" style="animation-delay: ${i*0.1}s">
-                        <div class="user-header">
-                            <div class="avatar"></div>
-                            <div class="user-info"><span class="username">${spot.user}</span><span class="time-ago">${spot.time}</span></div>
-                        </div>
-                        <div class="place-name">${spot.place}</div>
-                        <div class="review-text">${spot.review}</div>
-                        <div class="tag-list"><span class="tag highlight">${spot.highlight}</span>${spot.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+                    <div class="feed-card">
+                        <div class="place-name">${s.place}</div>
+                        <div class="review-text">${s.review}</div>
+                        <div class="tag-list"><span class="tag highlight">${s.highlight}</span>${s.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
                     </div>`;
             });
         } catch (e) {
-            feed.innerHTML = `<div style="padding:20px; background:white; border-radius:20px; color:red;"><h3>Fehler</h3><p>${e.message}</p></div>`;
+            feed.innerHTML = `<div style="padding:20px; color:red;">API Fehler: Bitte prüfe deinen Key im Google Cloud Dashboard.</div>`;
         }
     }
 </script>
 </body>
 </html>
-
