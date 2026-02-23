@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vibe-Check Live</title>
+    <title>Vibe-Check AI Maps</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root { 
@@ -19,7 +19,7 @@
         .app-container { background-color: var(--bg-soft); width: 100%; max-width: 400px; height: 100vh; max-height: 850px; position: relative; overflow: hidden; display: flex; flex-direction: column; }
         @media (min-width: 450px) { .app-container { height: 90vh; border-radius: 44px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 8px rgba(255,255,255,0.6); } }
 
-        /* Header mit der schicken Pastell-Schrift */
+        /* Header */
         .top-bar { padding: 40px 24px 15px 24px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 50; display: flex; flex-direction: column; gap: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.5); }
         .top-header { display: flex; justify-content: space-between; align-items: center; }
         h1 { font-size: 1.6rem; margin: 0; font-weight: 800; background: linear-gradient(135deg, var(--pastel-salmon), var(--pastel-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.5px; }
@@ -32,23 +32,22 @@
         .search-box:focus-within { background: white; border-color: var(--pastel-blue); box-shadow: 0 4px 15px rgba(167, 199, 231, 0.2); }
         .search-input { border: none; background: transparent; width: 100%; height: 100%; outline: none; font-family: 'Inter', sans-serif; font-size: 0.9rem; color: var(--text-dark); margin-left: 10px; font-weight: 500; }
 
-        /* Feed-Bereich mit weichen Verläufen */
+        /* Feed */
         .feed-container { flex: 1; overflow-y: auto; padding: 20px 24px 120px 24px; scrollbar-width: none; background: radial-gradient(circle at top right, rgba(255, 159, 138, 0.08), transparent 50%); }
         .feed-container::-webkit-scrollbar { display: none; }
         h2 { margin: 0 0 20px 0; font-size: 1.25rem; font-weight: 700; color: #1e293b; }
         
-        /* Die schicken Feed-Karten */
         .feed-card { background: var(--glass-bg); backdrop-filter: blur(24px) saturate(180%); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 28px; padding: 22px; margin-bottom: 24px; box-shadow: 0 10px 30px rgba(148, 163, 184, 0.08); animation: fadeSlideUp 0.6s var(--transition-smooth) forwards; }
         @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
         .place-name { font-weight: 800; font-size: 1.15rem; margin-bottom: 6px; color: #1e293b; }
-        .review-text { font-size: 0.95rem; line-height: 1.5; color: #475569; margin-bottom: 16px; }
+        .review-text { font-size: 0.95rem; line-height: 1.5; color: #475569; margin-bottom: 16px; font-style: italic; border-left: 3px solid var(--pastel-salmon); padding-left: 10px; }
         
         .tag-list { display: flex; gap: 8px; flex-wrap: wrap; }
         .tag { font-size: 0.75rem; background: white; padding: 6px 14px; border-radius: 10px; font-weight: 600; border: 1px solid #f1f5f9; color: #64748b; }
         .tag.highlight { background: rgba(167, 199, 231, 0.15); color: #478ecc; border-color: rgba(167, 199, 231, 0.3); }
 
-        /* Navigation - Perfekt symmetrisch & Aktiv */
+        /* Navigation */
         .bottom-nav-container { position: absolute; bottom: 30px; left: 0; width: 100%; display: flex; justify-content: center; z-index: 100; }
         .bottom-nav { 
             width: 85%; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(25px); 
@@ -76,28 +75,28 @@
     <div class="top-bar">
         <div class="top-header">
             <h1>Vibe-Check</h1>
-            <div class="location-pill" id="locationPill" onclick="autoDetect()">📍 Live-Ort</div>
+            <div class="location-pill" id="locationPill" onclick="autoDetect()">📍 Radar aktivieren</div>
         </div>
         <div class="search-container">
             <div class="search-box">
                 <span style="opacity: 0.5;">🔍</span>
-                <input type="text" id="searchInput" class="search-input" placeholder="Stadt suchen (z.B. Berlin)..." onkeypress="handleSearch(event)">
+                <input type="text" id="searchInput" class="search-input" placeholder="Stadt eingeben..." onkeypress="handleSearch(event)">
             </div>
         </div>
     </div>
 
     <div class="feed-container" id="feedContainer">
-        <h2 id="feedTitle">Entdecke Vibes ✨</h2>
+        <h2 id="feedTitle">Entdecke Secret Spots ✨</h2>
         <div id="statusMessage" style="text-align:center; padding: 40px; color: #94a3b8;">
-            Suche eine Stadt oder nutze den Live-Ort.
+            Tippe auf Radar oder suche eine Stadt, um echte Geheimtipps und ihre Vibe-Bewertungen zu finden.
         </div>
     </div>
 
     <div class="bottom-nav-container">
         <div class="bottom-nav">
-            <div class="nav-item" onclick="setActive(this)"><span class="nav-icon">🗺️</span><span>Radar</span></div>
+            <div class="nav-item" onclick="setActive(this); autoDetect();"><span class="nav-icon">🗺️</span><span>Radar</span></div>
             <div class="nav-item active" onclick="setActive(this)"><span class="nav-icon">✨</span><span>Feed</span></div>
-            <div class="fab-button" onclick="alert('Vibe posten...')">+</div>
+            <div class="fab-button" onclick="alert('Vibe bewerten...')">+</div>
             <div class="nav-item" onclick="setActive(this)"><span class="nav-icon">💬</span><span>Chats</span></div>
             <div class="nav-item" onclick="setActive(this)"><span class="nav-icon">👤</span><span>Profil</span></div>
         </div>
@@ -105,13 +104,13 @@
 </div>
 
 <script>
-    // Navigation Logik
+    const API_KEY = "AIzaSyDZCOlfxj6iOMLD9ZsH_a0fKScKnNBP6RA"; 
+
     function setActive(el) {
         document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
         el.classList.add('active');
     }
 
-    // ENTER-Suche
     function handleSearch(event) {
         if (event.key === 'Enter') {
             fetchVibes(document.getElementById('searchInput').value);
@@ -119,67 +118,7 @@
         }
     }
 
-    // GPS-Automatik
+    // 1. GPS holt den exakten Stadtnamen, damit die KI perfekt filtern kann
     function autoDetect() {
         if (navigator.geolocation) {
-            document.getElementById('locationPill').innerText = "📍 Ortung...";
-            navigator.geolocation.getCurrentPosition(async (pos) => {
-                const lat = pos.coords.latitude;
-                const lon = pos.coords.longitude;
-                // Reverse Geocoding für Pill-Text
-                try {
-                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-                    const data = await res.json();
-                    const city = data.address.city || data.address.town || data.address.village || "Dein Ort";
-                    document.getElementById('locationPill').innerText = "📍 " + city;
-                    fetchVibes(city, lat, lon);
-                } catch(e) { fetchVibes("Dein Standort", lat, lon); }
-            }, () => fetchVibes("Braunschweig"));
-        }
-    }
-
-    // Die neue stabile Logik im alten Design
-    async function fetchVibes(city, customLat = null, customLon = null) {
-        const feed = document.getElementById('feedContainer');
-        feed.innerHTML = `<p style="text-align:center;padding-top:40px;color:#94a3b8;">Suche Cafés in ${city}...</p>`;
-
-        try {
-            let lat, lon;
-            if (customLat && customLon) {
-                lat = customLat; lon = customLon;
-            } else {
-                const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`);
-                const geoData = await geoRes.json();
-                if (!geoData.length) { feed.innerHTML = "Stadt nicht gefunden."; return; }
-                lat = geoData[0].lat; lon = geoData[0].lon;
-            }
-
-            const query = `[out:json];node["amenity"="cafe"](around:3000,${lat},${lon});out;`;
-            const overpassRes = await fetch("https://overpass-api.de/api/interpreter", {
-                method: "POST",
-                body: query
-            });
-            const overpassData = await overpassRes.json();
-            const cafes = overpassData.elements.slice(0, 8);
-
-            if (!cafes.length) { feed.innerHTML = "Keine Cafés gefunden."; return; }
-
-            feed.innerHTML = `<h2>Spots in ${city}</h2>`;
-            cafes.forEach(cafe => {
-                feed.innerHTML += `
-                    <div class="feed-card">
-                        <div class="place-name">${cafe.tags.name || "Lokales Café"}</div>
-                        <div class="review-text">Ein authentischer Spot in ${city}. Perfekt für einen entspannten Vibe und gute Gespräche.</div>
-                        <div class="tag-list">
-                            <span class="tag highlight">☕ Local Spot</span>
-                            <span class="tag">OpenStreetMap</span>
-                        </div>
-                    </div>`;
-            });
-        } catch (error) {
-            feed.innerHTML = "Fehler beim Laden der Cafés.";
-        }
-    }
-</script>
-</body>
-</html>
+            document.getElementById('locationPill').innerText = "📍
