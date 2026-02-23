@@ -118,7 +118,6 @@
         }
     }
 
-    // 1. GPS holt den exakten Stadtnamen, damit die KI perfekt filtern kann
     function autoDetect() {
         if (navigator.geolocation) {
             document.getElementById('locationPill').innerText = "📍 Ortung...";
@@ -139,32 +138,27 @@
         }
     }
 
-    // 2. Die KI sucht auf Google Maps nach echten Orten und analysiert Reviews!
     async function fetchVibes(query) {
         const feed = document.getElementById('feedContainer');
         feed.innerHTML = `<p style="text-align:center;padding-top:40px;color:#94a3b8;">Analysiere Google-Rezensionen in ${query}... 🕵️‍♀️</p>`;
 
         try {
-            // Wir nutzen die V1 Stable API für 100% Zuverlässigkeit
-            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+            // Die sicherste API-Version für Gemini
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
             
-            // DER MAGISCHE PROMPT FÜR ECHTE BEWERTUNGEN
             const prompt = `
-            Du bist ein lokaler Guide, der echte Google Maps Daten analysiert.
-            Suche nach 5 ECHTEN, existierenden "Secret Spots" (Cafés, kleine Bars oder gemütliche Hinterhof-Bistros) in: "${query}".
+            Du bist ein lokaler Vibe-Check Guide.
+            Suche nach 5 ECHTEN, existierenden "Secret Spots" (kleine, gemütliche Cafés oder winzige Hinterhof-Bistros) in: "${query}".
             
-            WICHTIGE REGELN:
-            1. KEINE KETTEN! Kein Starbucks, kein Espresso House, kein Balzac, kein McDonalds. Nur kleine, unabhängige und gemütliche Läden.
-            2. Analysiere, was echte Leute auf Google Maps über diesen Ort schreiben.
-            3. Der "review" Text MUSS eine authentische Zusammenfassung dieser echten Rezensionen sein (z.B. "Laut den Bewertungen sind die Zimtschnecken hier legendär und der ruhige Innenhof wird oft gelobt.").
+            STRENGE REGELN:
+            1. KEINE KETTEN! Kein Starbucks, kein Balzac etc. Nur kleine, echte Orte.
+            2. Der "review" Text MUSS eine Zusammenfassung von echten Google Maps Bewertungen sein.
             
-            Antworte AUSSCHLIESSLICH als JSON-Array, ohne Markdown, ohne andere Wörter:
+            Antworte AUSSCHLIESSLICH im JSON-Format, keine Begrüßung, kein Markdown, nur das pure Array:
             [
               {
-                "user": "@local_explorer",
-                "time": "Gerade eben",
-                "place": "Echter Name des Cafés/der Bar",
-                "review": "Zusammenfassung echter Bewertungen...",
+                "place": "Echter Name des Cafés",
+                "review": "Laut den Bewertungen...",
                 "highlight": "☁️ Cozy Gem",
                 "tags": ["Tag 1", "Tag 2"]
               }
@@ -177,11 +171,22 @@
             });
 
             const data = await response.json();
-            if (data.error) throw new Error(data.error.message);
+            
+            // 1. Check, ob die Google API blockiert (z.B. API-Key Fehler)
+            if (data.error) {
+                throw new Error("Google Server sagt: " + data.error.message);
+            }
 
             let rawText = data.candidates[0].content.parts[0].text;
-            rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-            const spots = JSON.parse(rawText);
+            
+            // 2. BULLETPROOF FILTER: Wir holen uns mit einer Regex NUR den Teil zwischen [ und ]
+            const jsonMatch = rawText.match(/\[[\s\S]*\]/);
+            if (!jsonMatch) {
+                throw new Error("KI hat falsches Format geliefert: " + rawText.substring(0, 50) + "...");
+            }
+
+            // 3. Wandle den gefilterten Text in nutzbare Daten um
+            const spots = JSON.parse(jsonMatch[0]);
 
             feed.innerHTML = `<h2>Secret Spots in ${query}</h2>`;
             
@@ -199,7 +204,13 @@
 
         } catch (error) {
             console.error(error);
-            feed.innerHTML = `<div style="padding:20px; color:red;">Fehler bei der KI-Analyse. Bitte versuche eine andere Stadt.</div>`;
+            // HIER ZEIGEN WIR DEN ECHTEN, DETAILLIERTEN FEHLER AN
+            feed.innerHTML = `
+                <div style="background: white; padding: 20px; border-radius: 20px; border-left: 5px solid #ef4444; margin-top: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+                    <h3 style="color: #ef4444; margin-top: 0; font-size: 1.1rem;">Technischer Fehler ⚠️</h3>
+                    <p style="color: #475569; font-size: 0.9rem; word-break: break-word; line-height: 1.5;">${error.message}</p>
+                    <p style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 0;">Die KI hat sich verschluckt. Versuch es einfach nochmal!</p>
+                </div>`;
         }
     }
 </script>
