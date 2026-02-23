@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vibe-Check Non-Plus-Ultra</title>
+    <title>Vibe-Check Premium</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root { 
@@ -86,9 +86,9 @@
     </div>
 
     <div class="feed-container" id="feedContainer">
-        <h2 id="feedTitle">Entdecke Secret Spots ✨</h2>
+        <h2 id="feedTitle">Entdecke Cafés ✨</h2>
         <div id="statusMessage" style="text-align:center; padding: 40px; color: #94a3b8;">
-            Tippe auf Radar oder suche eine Stadt, um unabhängige Cafés & Bars zu finden.
+            Tippe auf Radar oder suche eine Stadt, um einzigartige Cafés und ihren Vibe zu finden.
         </div>
     </div>
 
@@ -125,7 +125,7 @@
                 try {
                     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
                     const data = await res.json();
-                    const city = data.address.city || data.address.town || data.address.suburb || "deiner Nähe";
+                    const city = data.address.city || data.address.town || data.address.village || "deiner Nähe";
                     document.getElementById('locationPill').innerText = "📍 " + city;
                     fetchVibes(city, lat, lon);
                 } catch(e) { fetchVibes("Deinem Standort", lat, lon); }
@@ -136,7 +136,6 @@
         }
     }
 
-    // Zufallsgenerator zum Mischen der Orte
     function shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -145,10 +144,19 @@
         return array;
     }
 
-    // Die kugelsichere, kostenlose Non-Plus-Ultra Engine
+    // Die Vibe-Kategorien (Das neue Gehirn)
+    const vibeCategories = [
+        { title: "☁️ Gemütlich", text: "Unglaublich entspannter Vibe. Man fühlt sich sofort wie im eigenen Wohnzimmer.", tags: ["Cozy", "Entspannt", "Wohlfühlen"] },
+        { title: "✨ Fantasie", text: "Fühlt sich an wie in einer anderen Welt! Super ästhetisches Interior und viel Liebe zum Detail.", tags: ["Aesthetic", "Magic", "Detailverliebt"] },
+        { title: "🌿 Botanical", text: "Eine absolute grüne Oase. Gefühlt tausend Pflanzen und sehr angenehme Luft.", tags: ["Pflanzen", "Natur", "Luftig"] },
+        { title: "🎨 Art Café", text: "Sehr kreative Atmosphäre. Viel Kunst an den Wänden und das Publikum ist super interessant.", tags: ["Kreativ", "Inspiring", "Galerie"] },
+        { title: "🪩 Indie Vibe", text: "Richtig cooler Off-Mainstream Spot. Die Playlist hier im Hintergrund ist immer makellos.", tags: ["Musik", "Alternativ", "Szene"] },
+        { title: "☕ Deep Focus", text: "Der perfekte Spot, wenn man einfach in Ruhe am Laptop arbeiten oder ein Buch lesen will.", tags: ["Laptop-friendly", "Leise", "Kaffee"] }
+    ];
+
     async function fetchVibes(city, customLat = null, customLon = null) {
         const feed = document.getElementById('feedContainer');
-        feed.innerHTML = `<p style="text-align:center;padding-top:40px;color:#94a3b8;">Scanne die Straßen von ${city} nach unabhängigen Orten... ☕</p>`;
+        feed.innerHTML = `<p style="text-align:center;padding-top:40px;color:#94a3b8;">Scanne die Straßen von ${city} nach schicken Cafés... ☕</p>`;
 
         try {
             let lat, lon;
@@ -161,15 +169,11 @@
                 lat = geoData[0].lat; lon = geoData[0].lon;
             }
 
-            // DER ANTI-MAINSTREAM FILTER
-            // Wir filtern große Ketten strengstens aus! Nur echte, unabhängige Cafés & Bars.
+            // NEUER STABILER ALGORITHMUS: Sucht ALLES (nwr = nodes, ways, relations) in 5km Umkreis!
             const query = `
-                [out:json][timeout:10];
-                (
-                  node["amenity"="cafe"]["name"]["name"!~"Starbucks|McCafé|Tchibo|Dunkin|BackWerk|Back-Factory|Balzac|Espresso House|Campus Suite",i](around:4000,${lat},${lon});
-                  node["amenity"="bar"]["name"]["name"!~"Sausage|Burger",i](around:4000,${lat},${lon});
-                );
-                out 15;
+                [out:json][timeout:15];
+                nwr["amenity"="cafe"](around:5000,${lat},${lon});
+                out center;
             `;
 
             const overpassRes = await fetch("https://overpass-api.de/api/interpreter", {
@@ -178,67 +182,49 @@
             });
             const overpassData = await overpassRes.json();
             
+            // 1. Filtere Orte OHNE Namen raus
             let validSpots = overpassData.elements.filter(el => el.tags && el.tags.name);
-            validSpots = shuffleArray(validSpots).slice(0, 8); // Immer 8 zufällige Spots
+
+            // 2. KETTEN-FILTER (JavaScript ist smarter als die Datenbank)
+            const chains = ["starbucks", "mccafé", "mccafe", "tchibo", "dunkin", "backwerk", "back-factory", "balzac", "espresso house", "campus suite", "extrablatt", "celona"];
+            validSpots = validSpots.filter(spot => {
+                const nameLower = spot.tags.name.toLowerCase();
+                return !chains.some(chain => nameLower.includes(chain));
+            });
+
+            // 3. Mische die Ergebnisse durch und nimm max. 8
+            validSpots = shuffleArray(validSpots).slice(0, 8);
 
             if (!validSpots.length) { 
-                feed.innerHTML = `<div style="text-align:center; padding: 20px;">Keine Secret Spots gefunden.</div>`; 
+                feed.innerHTML = `<div style="text-align:center; padding: 20px;">Keine schicken Cafés in diesem Gebiet gefunden.</div>`; 
                 return; 
             }
 
-            feed.innerHTML = `<h2>Hidden Gems in ${city}</h2>`;
+            feed.innerHTML = `<h2>Schicke Spots in ${city}</h2>`;
             
             validSpots.forEach((spot, i) => {
-                let tags = spot.tags;
-                
-                // Vibe-Engine: Baut realistische Texte anhand ECHTER Daten
-                let categoryText = "☕ Local Café";
-                let reviewText = `"Ein absoluter Geheimtipp in ${city}! Richtig gemütliche Atmosphäre und weit weg vom Mainstream."`;
-                let highlight = "☁️ Hidden Gem";
-                let htmlTags = [];
-
-                if (tags.amenity === "bar") {
-                    categoryText = "🍷 Indie Bar";
-                    reviewText = `"Super entspannter Vibe für den Abend. Das gedimmte Licht macht es extrem gemütlich."`;
-                    highlight = "🌙 Night Vibe";
-                } else {
-                    // Checke Café Attribute für realistische Reviews
-                    if (tags.internet_access === "wlan" || tags.wifi === "yes") {
-                        reviewText = `"Mein absoluter Favorit zum Arbeiten in ${city}! Das WLAN ist super und man hat seine Ruhe."`;
-                        highlight = "💻 Deep Focus";
-                        htmlTags.push("Laptop-friendly");
-                    }
-                    if (tags.outdoor_seating === "yes") {
-                        reviewText = `"Der kleine Außenbereich hier ist ein Traum, wenn die Sonne scheint. Sehr authentisch."`;
-                        htmlTags.push("Sunny Spot");
-                    }
-                    if (tags.vegan === "yes" || tags.diet_vegan === "yes") {
-                        htmlTags.push("Vegan Options");
-                    }
-                }
-
-                // Fallback, wenn keine speziellen Tags gefunden wurden
-                if (htmlTags.length === 0) htmlTags.push("Cozy", "Authentic");
-
-                // Entfernung schätzen (Fake-Werte für das UI-Erlebnis, da Browser-Standort vs. Such-Stadt variiert)
-                let distance = Math.round(Math.random() * 900 + 100);
+                // Weise jedem Café basierend auf seinem Namen einen festen Vibe zu, 
+                // damit es sich beim erneuten Suchen nicht komplett ändert.
+                const nameLength = spot.tags.name.length;
+                const vibeIndex = nameLength % vibeCategories.length;
+                const vibe = vibeCategories[vibeIndex];
 
                 feed.innerHTML += `
                     <div class="feed-card" style="animation-delay: ${i*0.1}s">
-                        <div class="place-name">${tags.name}</div>
-                        <div class="review-text">${reviewText}</div>
+                        <div class="place-name">${spot.tags.name}</div>
+                        <div class="review-text">"${vibe.text}"</div>
                         <div class="tag-list">
-                            <span class="tag highlight">${highlight}</span>
-                            ${htmlTags.map(t => `<span class="tag">${t}</span>`).join('')}
-                            <span class="tag">📍 ${distance}m</span>
+                            <span class="tag highlight">${vibe.title}</span>
+                            ${vibe.tags.map(t => `<span class="tag">${t}</span>`).join('')}
                         </div>
                     </div>`;
             });
 
         } catch (error) {
-            feed.innerHTML = `<div style="padding:20px; color:red;">Verbindungsfehler zur Datenbank.</div>`;
+            feed.innerHTML = `<div style="padding:20px; color:red;">Verbindungsfehler zur Kartendatenbank.</div>`;
         }
     }
 </script>
 </body>
 </html>
+
