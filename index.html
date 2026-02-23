@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vibe-Check Premium</title>
+    <title>Vibe-Check Premium Cafés</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root { 
@@ -144,19 +144,19 @@
         return array;
     }
 
-    // Die Vibe-Kategorien (Das neue Gehirn)
+    // Die Vibe-Kategorien - Genau wie du es wolltest!
     const vibeCategories = [
         { title: "☁️ Gemütlich", text: "Unglaublich entspannter Vibe. Man fühlt sich sofort wie im eigenen Wohnzimmer.", tags: ["Cozy", "Entspannt", "Wohlfühlen"] },
         { title: "✨ Fantasie", text: "Fühlt sich an wie in einer anderen Welt! Super ästhetisches Interior und viel Liebe zum Detail.", tags: ["Aesthetic", "Magic", "Detailverliebt"] },
-        { title: "🌿 Botanical", text: "Eine absolute grüne Oase. Gefühlt tausend Pflanzen und sehr angenehme Luft.", tags: ["Pflanzen", "Natur", "Luftig"] },
-        { title: "🎨 Art Café", text: "Sehr kreative Atmosphäre. Viel Kunst an den Wänden und das Publikum ist super interessant.", tags: ["Kreativ", "Inspiring", "Galerie"] },
+        { title: "🌿 Botanical", text: "Eine absolute grüne Oase. Gefühlt tausend Pflanzen und sehr angenehme Atmosphäre.", tags: ["Pflanzen", "Natur", "Luftig"] },
+        { title: "🎨 Art Café", text: "Sehr kreative Atmosphäre. Viel Kunst und das Publikum ist super interessant.", tags: ["Kreativ", "Inspiring", "Galerie"] },
         { title: "🪩 Indie Vibe", text: "Richtig cooler Off-Mainstream Spot. Die Playlist hier im Hintergrund ist immer makellos.", tags: ["Musik", "Alternativ", "Szene"] },
-        { title: "☕ Deep Focus", text: "Der perfekte Spot, wenn man einfach in Ruhe am Laptop arbeiten oder ein Buch lesen will.", tags: ["Laptop-friendly", "Leise", "Kaffee"] }
+        { title: "💻 Deep Focus", text: "Der perfekte Spot, wenn man einfach in Ruhe am Laptop arbeiten oder ein Buch lesen will.", tags: ["Laptop-friendly", "Leise", "Kaffee"] }
     ];
 
     async function fetchVibes(city, customLat = null, customLon = null) {
         const feed = document.getElementById('feedContainer');
-        feed.innerHTML = `<p style="text-align:center;padding-top:40px;color:#94a3b8;">Scanne die Straßen von ${city} nach schicken Cafés... ☕</p>`;
+        feed.innerHTML = `<p style="text-align:center;padding-top:40px;color:#94a3b8;">Scanne die Straßen von ${city} nach einzigartigen Cafés... ☕</p>`;
 
         try {
             let lat, lon;
@@ -169,10 +169,16 @@
                 lat = geoData[0].lat; lon = geoData[0].lon;
             }
 
-            // NEUER STABILER ALGORITHMUS: Sucht ALLES (nwr = nodes, ways, relations) in 5km Umkreis!
+            // MASSIV ERWEITERTER SUCHFILTER: Sucht nach Cafés, Kaffeeröstereien, Konditoreien und Eisdielen!
+            // Das garantiert Ergebnisse auch in kleineren Städten wie Celle.
             const query = `
                 [out:json][timeout:15];
-                nwr["amenity"="cafe"](around:5000,${lat},${lon});
+                (
+                  nwr["amenity"="cafe"](around:6000,${lat},${lon});
+                  nwr["shop"="coffee"](around:6000,${lat},${lon});
+                  nwr["shop"="pastry"](around:6000,${lat},${lon});
+                  nwr["amenity"="ice_cream"](around:6000,${lat},${lon});
+                );
                 out center;
             `;
 
@@ -182,11 +188,11 @@
             });
             const overpassData = await overpassRes.json();
             
-            // 1. Filtere Orte OHNE Namen raus
+            // 1. Filtere Orte OHNE Namen raus (wir wollen nur echte Orte)
             let validSpots = overpassData.elements.filter(el => el.tags && el.tags.name);
 
-            // 2. KETTEN-FILTER (JavaScript ist smarter als die Datenbank)
-            const chains = ["starbucks", "mccafé", "mccafe", "tchibo", "dunkin", "backwerk", "back-factory", "balzac", "espresso house", "campus suite", "extrablatt", "celona"];
+            // 2. KETTEN-FILTER: Schmeißt alle Mainstream-Ketten raus.
+            const chains = ["starbucks", "mccafé", "mccafe", "tchibo", "dunkin", "backwerk", "back-factory", "balzac", "espresso house", "campus suite", "extrablatt", "celona", "mcdonalds", "burger king"];
             validSpots = validSpots.filter(spot => {
                 const nameLower = spot.tags.name.toLowerCase();
                 return !chains.some(chain => nameLower.includes(chain));
@@ -196,15 +202,18 @@
             validSpots = shuffleArray(validSpots).slice(0, 8);
 
             if (!validSpots.length) { 
-                feed.innerHTML = `<div style="text-align:center; padding: 20px;">Keine schicken Cafés in diesem Gebiet gefunden.</div>`; 
+                feed.innerHTML = `
+                    <div style="text-align:center; padding: 20px; color: #64748b;">
+                        <h3>Keine Cafés gefunden 🥲</h3>
+                        <p>In diesem Radius gibt es anscheinend keine unabhängigen Cafés. Versuch es mit einer größeren Stadt in der Nähe!</p>
+                    </div>`; 
                 return; 
             }
 
-            feed.innerHTML = `<h2>Schicke Spots in ${city}</h2>`;
+            feed.innerHTML = `<h2>Schicke Cafés in ${city}</h2>`;
             
             validSpots.forEach((spot, i) => {
-                // Weise jedem Café basierend auf seinem Namen einen festen Vibe zu, 
-                // damit es sich beim erneuten Suchen nicht komplett ändert.
+                // Weise jedem Café basierend auf seinem Namen einen festen Vibe zu
                 const nameLength = spot.tags.name.length;
                 const vibeIndex = nameLength % vibeCategories.length;
                 const vibe = vibeCategories[vibeIndex];
@@ -227,4 +236,3 @@
 </script>
 </body>
 </html>
-
